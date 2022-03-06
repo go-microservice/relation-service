@@ -1,2 +1,1 @@
-# relation-service
-关系服务
+# go-project-layout
