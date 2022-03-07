@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package relation.v1;
+
+option go_package = "github.com/go-microservice/relation-service/api/relation/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.relation.v1";
+
+// 好友关系服务
+service RelationService {
+	// 关注
+	rpc Follow (FollowRequest) returns (FollowReply);
+	// 取消关注
+	rpc Unfollow (UnfollowRequest) returns (UnfollowReply);
+	// 批量获取关注关系
+	rpc BatchGetRelation (BatchGetRelationRequest) returns (BatchGetRelationReply);
+	// 关注列表
+	rpc GetFollowingList (FollowingListRequest) returns (FollowingListReply);
+	// 粉丝列表
+	rpc GetFollowerList (FollowerListRequest) returns (FollowerListRequest);
+}
+
+message FollowRequest {
+	int64 user_id = 1;
+	int64 followed_uid = 2;
+}
+message FollowReply {}
+
+message UnfollowRequest {
+	int64 user_id = 1;
+	int64 followed_uid = 2;
+}
+message UnfollowReply {}
+
+message BatchGetRelationRequest {
+	int64 user_id = 1;
+	repeated int64 ids = 2;
+}
+message BatchGetRelationReply {
+	map<int64, int64> ret = 1;
+}
+
+message FollowingListRequest {
+	int64 user_id = 1;
+}
+message FollowingListReply {
+	repeated int64 user_ids = 1;
+}
+
+message FollowerListRequest {
+	int64 user_id = 1;
+}
+message FollowerListReply {
+	repeated int64 user_ids = 1;
+}
