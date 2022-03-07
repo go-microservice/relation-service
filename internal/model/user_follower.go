@@ -4,9 +4,9 @@ import "time"
 
 // UserFollowerModel 粉丝表
 type UserFollowerModel struct {
-	ID          uint64    `gorm:"primary_key;AUTO_INCREMENT;column:id" json:"-"`
-	UserID      uint64    `gorm:"column:user_id" json:"user_id"`
-	FollowerUID uint64    `gorm:"column:follower_uid" json:"follower_uid"`
+	ID          int64     `gorm:"primary_key;AUTO_INCREMENT;column:id" json:"-"`
+	UserID      int64     `gorm:"column:user_id" json:"user_id"`
+	FollowerUID int64     `gorm:"column:follower_uid" json:"follower_uid"`
 	Status      int       `gorm:"column:status" json:"status"`
 	CreatedAt   time.Time `gorm:"column:created_at" json:"-"`
 	UpdatedAt   time.Time `gorm:"column:updated_at" json:"-"`
