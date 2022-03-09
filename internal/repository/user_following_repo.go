@@ -28,8 +28,8 @@ var _ UserFollowingRepo = (*userFollowingRepo)(nil)
 
 // UserFollowingRepo define a repo interface
 type UserFollowingRepo interface {
-	CreateUserFollowing(ctx context.Context, data *model.UserFollowingModel) (id int64, err error)
-	UpdateUserFollowing(ctx context.Context, userID, followedUID int64, data *model.UserFollowingModel) error
+	CreateUserFollowing(ctx context.Context, db *gorm.DB, data *model.UserFollowingModel) (id int64, err error)
+	UpdateUserFollowingStatus(ctx context.Context, db *gorm.DB, userID, followedUID int64, status int) error
 	GetUserFollowing(ctx context.Context, userID, followedUID int64) (ret *model.UserFollowingModel, err error)
 }
 
@@ -49,9 +49,8 @@ func NewUserFollowing(db *gorm.DB, cache cache.UserFollowingCache) UserFollowing
 }
 
 // CreateUserFollowing create a item
-func (r *userFollowingRepo) CreateUserFollowing(ctx context.Context, data *model.UserFollowingModel) (id int64, err error) {
-	// TODO: 增加事务处理
-	err = r.db.WithContext(ctx).Create(&data).Error
+func (r *userFollowingRepo) CreateUserFollowing(ctx context.Context, db *gorm.DB, data *model.UserFollowingModel) (id int64, err error) {
+	err = db.WithContext(ctx).Create(&data).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "[repo] create UserFollowing err")
 	}
@@ -60,15 +59,14 @@ func (r *userFollowingRepo) CreateUserFollowing(ctx context.Context, data *model
 }
 
 // UpdateUserFollowing update item
-func (r *userFollowingRepo) UpdateUserFollowing(ctx context.Context, userID, followedUID int64, data *model.UserFollowingModel) error {
-	item, err := r.GetUserFollowing(ctx, userID, followedUID)
-	if err != nil {
-		return errors.Wrapf(err, "[repo] update UserFollowing err: %v", err)
-	}
-	err = r.db.Model(&item).Updates(data).Error
+func (r *userFollowingRepo) UpdateUserFollowingStatus(ctx context.Context, db *gorm.DB, userID, followedUID int64, status int) error {
+	userFollow := model.UserFollowingModel{}
+	err := db.Model(&userFollow).Where("user_id=? and followed_uid=?", userID, followedUID).
+		Updates(map[string]interface{}{"status": status, "updated_at": time.Now()}).Error
 	if err != nil {
 		return err
 	}
+
 	// delete cache
 	_ = r.cache.DelUserFollowingCache(ctx, userID, followedUID)
 	return nil
@@ -91,7 +89,7 @@ func (r *userFollowingRepo) GetUserFollowing(ctx context.Context, userID, follow
 	}
 
 	if data != nil && data.ID > 0 {
-		err = r.cache.SetUserFollowingCache(ctx, userID, followedUID, 5*time.Minute)
+		err = r.cache.SetUserFollowingCache(ctx, userID, followedUID, data, 5*time.Minute)
 		if err != nil {
 			return nil, err
 		}

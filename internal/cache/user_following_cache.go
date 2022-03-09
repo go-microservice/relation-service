@@ -22,7 +22,7 @@ const (
 
 // UserFollowing define cache interface
 type UserFollowingCache interface {
-	SetUserFollowingCache(ctx context.Context, userID, followedUID int64, duration time.Duration) error
+	SetUserFollowingCache(ctx context.Context, userID, followedUID int64, data *model.UserFollowingModel, duration time.Duration) error
 	GetUserFollowingCache(ctx context.Context, userID, followedUID int64) (data *model.UserFollowingModel, err error)
 	DelUserFollowingCache(ctx context.Context, userID, followedUID int64) error
 }

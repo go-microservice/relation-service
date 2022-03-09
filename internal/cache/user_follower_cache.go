@@ -17,16 +17,14 @@ import (
 
 const (
 	// PrefixUserFollowerCacheKey cache prefix
-	PrefixUserFollowerCacheKey = "userFollower:%d"
+	PrefixUserFollowerCacheKey = "user:follower:%d_%d"
 )
 
 // UserFollower define cache interface
 type UserFollowerCache interface {
-	SetUserFollowerCache(ctx context.Context, id int64, data *model.UserFollowerModel, duration time.Duration) error
-	GetUserFollowerCache(ctx context.Context, id int64) (data *model.UserFollowerModel, err error)
-	MultiGetUserFollowerCache(ctx context.Context, ids []int64) (map[string]*model.UserFollowerModel, error)
-	MultiSetUserFollowerCache(ctx context.Context, data []*model.UserFollowerModel, duration time.Duration) error
-	DelUserFollowerCache(ctx context.Context, id int64) error
+	SetUserFollowerCache(ctx context.Context, userID, followedUID int64, data *model.UserFollowerModel, duration time.Duration) error
+	GetUserFollowerCache(ctx context.Context, userID, followedUID int64) (data *model.UserFollowerModel, err error)
+	DelUserFollowerCache(ctx context.Context, userID, followedUID int64) error
 }
 
 // userFollowerCache define cache struct
@@ -46,16 +44,16 @@ func NewUserFollowerCache() *userFollowerCache {
 }
 
 // GetUserFollowerCacheKey get cache key
-func (c *userFollowerCache) GetUserFollowerCacheKey(id int64) string {
-	return fmt.Sprintf(PrefixUserFollowerCacheKey, id)
+func (c *userFollowerCache) GetUserFollowerCacheKey(userID, followedUID int64) string {
+	return fmt.Sprintf(PrefixUserFollowerCacheKey, userID, followedUID)
 }
 
 // SetUserFollowerCache write to cache
-func (c *userFollowerCache) SetUserFollowerCache(ctx context.Context, id int64, data *model.UserFollowerModel, duration time.Duration) error {
-	if data == nil || id == 0 {
+func (c *userFollowerCache) SetUserFollowerCache(ctx context.Context, userID, followedUID int64, data *model.UserFollowerModel, duration time.Duration) error {
+	if data == nil || userID == 0 {
 		return nil
 	}
-	cacheKey := c.GetUserFollowerCacheKey(id)
+	cacheKey := c.GetUserFollowerCacheKey(userID, followedUID)
 	err := c.cache.Set(ctx, cacheKey, data, duration)
 	if err != nil {
 		return err
@@ -64,8 +62,8 @@ func (c *userFollowerCache) SetUserFollowerCache(ctx context.Context, id int64, 
 }
 
 // GetUserFollowerCache get from cache
-func (c *userFollowerCache) GetUserFollowerCache(ctx context.Context, id int64) (data *model.UserFollowerModel, err error) {
-	cacheKey := c.GetUserFollowerCacheKey(id)
+func (c *userFollowerCache) GetUserFollowerCache(ctx context.Context, userID, followedUID int64) (data *model.UserFollowerModel, err error) {
+	cacheKey := c.GetUserFollowerCacheKey(userID, followedUID)
 	err = c.cache.Get(ctx, cacheKey, &data)
 	if err != nil {
 		log.WithContext(ctx).Warnf("get err from redis, err: %+v", err)
@@ -74,52 +72,10 @@ func (c *userFollowerCache) GetUserFollowerCache(ctx context.Context, id int64) 
 	return data, nil
 }
 
-// MultiGetUserFollowerCache batch get cache
-func (c *userFollowerCache) MultiGetUserFollowerCache(ctx context.Context, ids []int64) (map[string]*model.UserFollowerModel, error) {
-	var keys []string
-	for _, v := range ids {
-		cacheKey := c.GetUserFollowerCacheKey(v)
-		keys = append(keys, cacheKey)
-	}
-
-	// NOTE: 需要在这里make实例化，如果在返回参数里直接定义会报 nil map
-	retMap := make(map[string]*model.UserFollowerModel)
-	err := c.cache.MultiGet(ctx, keys, retMap)
-	if err != nil {
-		return nil, err
-	}
-	return retMap, nil
-}
-
-// MultiSetUserFollowerCache batch set cache
-func (c *userFollowerCache) MultiSetUserFollowerCache(ctx context.Context, data []*model.UserFollowerModel, duration time.Duration) error {
-	valMap := make(map[string]interface{})
-	for _, v := range data {
-		cacheKey := c.GetUserFollowerCacheKey(v.ID)
-		valMap[cacheKey] = v
-	}
-
-	err := c.cache.MultiSet(ctx, valMap, duration)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // DelUserFollowerCache delete cache
-func (c *userFollowerCache) DelUserFollowerCache(ctx context.Context, id int64) error {
-	cacheKey := c.GetUserFollowerCacheKey(id)
+func (c *userFollowerCache) DelUserFollowerCache(ctx context.Context, userID, followedUID int64) error {
+	cacheKey := c.GetUserFollowerCacheKey(userID, followedUID)
 	err := c.cache.Del(ctx, cacheKey)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// DelUserFollowerCache set empty cache
-func (c *userFollowerCache) SetCacheWithNotFound(ctx context.Context, id int64) error {
-	cacheKey := c.GetUserFollowerCacheKey(id)
-	err := c.cache.SetCacheWithNotFound(ctx, cacheKey)
 	if err != nil {
 		return err
 	}
