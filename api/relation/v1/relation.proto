@@ -12,12 +12,12 @@ service RelationService {
 	rpc Follow (FollowRequest) returns (FollowReply);
 	// 取消关注
 	rpc Unfollow (UnfollowRequest) returns (UnfollowReply);
-	// 批量获取关注关系
+	// 批量获取关注关系, eg: A 对 B,C,D是否已关注
 	rpc BatchGetRelation (BatchGetRelationRequest) returns (BatchGetRelationReply);
 	// 关注列表
 	rpc GetFollowingList (FollowingListRequest) returns (FollowingListReply);
 	// 粉丝列表
-	rpc GetFollowerList (FollowerListRequest) returns (FollowerListRequest);
+	rpc GetFollowerList (FollowerListRequest) returns (FollowerListReply);
 }
 
 message FollowRequest {
@@ -37,11 +37,13 @@ message BatchGetRelationRequest {
 	repeated int64 ids = 2;
 }
 message BatchGetRelationReply {
-	map<int64, int64> ret = 1;
+	map<int64, int64> result = 1;
 }
 
 message FollowingListRequest {
 	int64 user_id = 1;
+	int64 last_id = 2;
+	int32 limit = 3;
 }
 message FollowingListReply {
 	repeated int64 user_ids = 1;
@@ -49,6 +51,8 @@ message FollowingListReply {
 
 message FollowerListRequest {
 	int64 user_id = 1;
+	int64 last_id = 2;
+	int32 limit = 3;
 }
 message FollowerListReply {
 	repeated int64 user_ids = 1;

@@ -31,6 +31,8 @@ type UserFollowingRepo interface {
 	CreateUserFollowing(ctx context.Context, db *gorm.DB, data *model.UserFollowingModel) (id int64, err error)
 	UpdateUserFollowingStatus(ctx context.Context, db *gorm.DB, userID, followedUID int64, status int) error
 	GetUserFollowing(ctx context.Context, userID, followedUID int64) (ret *model.UserFollowingModel, err error)
+	GetFollowingUserList(ctx context.Context, userID, lastID int64, limit int) ([]*model.UserFollowingModel, error)
+	BatchGetUserFollowing(ctx context.Context, userID int64, ids []int64) (ret []*model.UserFollowingModel, err error)
 }
 
 type userFollowingRepo struct {
@@ -95,4 +97,31 @@ func (r *userFollowingRepo) GetUserFollowing(ctx context.Context, userID, follow
 		}
 	}
 	return data, nil
+}
+
+// BatchGetUserFollowing get a record
+func (r *userFollowingRepo) BatchGetUserFollowing(ctx context.Context, userID int64, ids []int64) (ret []*model.UserFollowingModel, err error) {
+	userFollowList := make([]*model.UserFollowingModel, 0)
+	result := r.db.WithContext(ctx).Where("user_id=? AND followed_uid in (?) and status=1", userID, ids).
+		Find(&userFollowList)
+
+	if err := result.Error; err != nil {
+		return nil, errors.Wrapf(err, "batch get user follow err")
+	}
+
+	return userFollowList, nil
+}
+
+// GetFollowingUserList 获取关注的用户列表
+func (r *userFollowingRepo) GetFollowingUserList(ctx context.Context, userID, lastID int64, limit int) ([]*model.UserFollowingModel, error) {
+	userFollowList := make([]*model.UserFollowingModel, 0)
+	result := r.db.WithContext(ctx).Where("user_id=? AND id<=? and status=1", userID, lastID).
+		Order("id desc").
+		Limit(limit).Find(&userFollowList)
+
+	if err := result.Error; err != nil {
+		return nil, errors.Wrapf(err, "get user follow list err")
+	}
+
+	return userFollowList, nil
 }

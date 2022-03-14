@@ -7,6 +7,10 @@ package main
 
 import (
 	"github.com/go-eagle/eagle/pkg/app"
+	"github.com/go-eagle/eagle/pkg/redis"
+	"github.com/go-microservice/relation-service/internal/cache"
+	"github.com/go-microservice/relation-service/internal/model"
+	"github.com/go-microservice/relation-service/internal/repository"
 	"github.com/go-microservice/relation-service/internal/server"
 	"github.com/go-microservice/relation-service/internal/service"
 )
@@ -18,8 +22,14 @@ import (
 // Injectors from wire.go:
 
 func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, error) {
-	greeterService := service.NewGreeterService()
-	grpcServer := server.NewGRPCServer(config, greeterService)
+	db := model.GetDB()
+	client := redis.Init()
+	userFollowerCache := cache.NewUserFollowerCache(client)
+	userFollowerRepo := repository.NewUserFollower(db, userFollowerCache)
+	userFollowingCache := cache.NewUserFollowingCache(client)
+	userFollowingRepo := repository.NewUserFollowing(db, userFollowingCache)
+	relationServiceServer := service.NewRelationServiceServer(userFollowerRepo, userFollowingRepo)
+	grpcServer := server.NewGRPCServer(config, relationServiceServer)
 	appApp := newApp(cfg, grpcServer)
 	return appApp, nil
 }

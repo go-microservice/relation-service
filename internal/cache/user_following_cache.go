@@ -10,7 +10,7 @@ import (
 	"github.com/go-eagle/eagle/pkg/cache"
 	"github.com/go-eagle/eagle/pkg/encoding"
 	"github.com/go-eagle/eagle/pkg/log"
-	"github.com/go-eagle/eagle/pkg/redis"
+	"github.com/go-redis/redis/v8"
 
 	"github.com/go-microservice/relation-service/internal/model"
 )
@@ -33,11 +33,11 @@ type userFollowingCache struct {
 }
 
 // NewUserFollowingCache new a cache
-func NewUserFollowingCache() *userFollowingCache {
+func NewUserFollowingCache(rdb *redis.Client) UserFollowingCache {
 	jsonEncoding := encoding.JSONEncoding{}
 	cachePrefix := ""
 	return &userFollowingCache{
-		cache: cache.NewRedisCache(redis.RedisClient, cachePrefix, jsonEncoding, func() interface{} {
+		cache: cache.NewRedisCache(rdb, cachePrefix, jsonEncoding, func() interface{} {
 			return &model.UserFollowingModel{}
 		}),
 	}

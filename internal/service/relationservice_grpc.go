@@ -170,13 +170,61 @@ func (s *RelationServiceServer) Unfollow(ctx context.Context, req *pb.UnfollowRe
 }
 
 func (s *RelationServiceServer) BatchGetRelation(ctx context.Context, req *pb.BatchGetRelationRequest) (*pb.BatchGetRelationReply, error) {
-	return &pb.BatchGetRelationReply{}, nil
+	if req.GetUserId() == 0 || len(req.GetIds()) == 0 {
+		return nil, ecode.ErrInvalidArgument.WithDetails().Status(req).Err()
+	}
+
+	ret, err := s.followingRepo.BatchGetUserFollowing(ctx, req.GetUserId(), req.GetIds())
+	if err != nil {
+		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
+			"msg": err.Error(),
+		})).Status(req).Err()
+	}
+
+	retMap := make(map[int64]int64)
+	for _, v := range ret {
+		retMap[v.FollowedUID] = int64(v.Status)
+	}
+
+	return &pb.BatchGetRelationReply{
+		Result: retMap,
+	}, nil
 }
 
 func (s *RelationServiceServer) GetFollowingList(ctx context.Context, req *pb.FollowingListRequest) (*pb.FollowingListReply, error) {
-	return &pb.FollowingListReply{}, nil
+	if req.GetLastId() == 0 {
+		req.LastId = MaxID
+	}
+	userFollowList, err := s.followingRepo.GetFollowingUserList(ctx, req.UserId, req.LastId, int(req.Limit))
+	if err != nil {
+		return nil, err
+	}
+
+	var userIDs []int64
+	for _, v := range userFollowList {
+		userIDs = append(userIDs, v.FollowedUID)
+	}
+
+	return &pb.FollowingListReply{
+		UserIds: userIDs,
+	}, nil
 }
 
-func (s *RelationServiceServer) GetFollowerList(ctx context.Context, req *pb.FollowerListRequest) (*pb.FollowerListRequest, error) {
-	return &pb.FollowerListRequest{}, nil
+func (s *RelationServiceServer) GetFollowerList(ctx context.Context, req *pb.FollowerListRequest) (*pb.FollowerListReply, error) {
+	if req.GetLastId() == 0 {
+		req.LastId = MaxID
+	}
+	userFollowList, err := s.followerRepo.GetFollowerUserList(ctx, req.UserId, req.LastId, int(req.Limit))
+	if err != nil {
+		return nil, err
+	}
+
+	var userIDs []int64
+	for _, v := range userFollowList {
+		userIDs = append(userIDs, v.FollowerUID)
+	}
+
+	return &pb.FollowerListReply{
+		UserIds: userIDs,
+	}, nil
 }

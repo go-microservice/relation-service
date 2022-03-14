@@ -29,6 +29,8 @@ type UserFollowerRepo interface {
 	CreateUserFollower(ctx context.Context, db *gorm.DB, data *model.UserFollowerModel) (id int64, err error)
 	UpdateUserFollowerStatus(ctx context.Context, db *gorm.DB, userID, followerUID int64, status int) error
 	GetUserFollower(ctx context.Context, userID, followedUID int64) (ret *model.UserFollowerModel, err error)
+	// 获取粉丝用户列表
+	GetFollowerUserList(ctx context.Context, userID, lastID int64, limit int) ([]*model.UserFollowerModel, error)
 }
 
 type userFollowerRepo struct {
@@ -92,4 +94,18 @@ func (r *userFollowerRepo) GetUserFollower(ctx context.Context, userID, followed
 		}
 	}
 	return data, nil
+}
+
+// GetFollowingUserList 获取粉丝用户列表
+func (r *userFollowerRepo) GetFollowerUserList(ctx context.Context, userID, lastID int64, limit int) ([]*model.UserFollowerModel, error) {
+	userFollowerList := make([]*model.UserFollowerModel, 0)
+	result := r.db.WithContext(ctx).Where("user_id=? AND id<=? and status=1", userID, lastID).
+		Order("id desc").
+		Limit(limit).Find(&userFollowerList)
+
+	if err := result.Error; err != nil {
+		return nil, errors.Wrapf(err, "get user follower list err")
+	}
+
+	return userFollowerList, nil
 }

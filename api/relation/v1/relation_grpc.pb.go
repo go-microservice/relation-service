@@ -26,12 +26,12 @@ type RelationServiceClient interface {
 	Follow(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*FollowReply, error)
 	// 取消关注
 	Unfollow(ctx context.Context, in *UnfollowRequest, opts ...grpc.CallOption) (*UnfollowReply, error)
-	// 批量获取关注关系
+	// 批量获取关注关系, eg: A 对 B,C,D是否已关注
 	BatchGetRelation(ctx context.Context, in *BatchGetRelationRequest, opts ...grpc.CallOption) (*BatchGetRelationReply, error)
 	// 关注列表
 	GetFollowingList(ctx context.Context, in *FollowingListRequest, opts ...grpc.CallOption) (*FollowingListReply, error)
 	// 粉丝列表
-	GetFollowerList(ctx context.Context, in *FollowerListRequest, opts ...grpc.CallOption) (*FollowerListRequest, error)
+	GetFollowerList(ctx context.Context, in *FollowerListRequest, opts ...grpc.CallOption) (*FollowerListReply, error)
 }
 
 type relationServiceClient struct {
@@ -78,8 +78,8 @@ func (c *relationServiceClient) GetFollowingList(ctx context.Context, in *Follow
 	return out, nil
 }
 
-func (c *relationServiceClient) GetFollowerList(ctx context.Context, in *FollowerListRequest, opts ...grpc.CallOption) (*FollowerListRequest, error) {
-	out := new(FollowerListRequest)
+func (c *relationServiceClient) GetFollowerList(ctx context.Context, in *FollowerListRequest, opts ...grpc.CallOption) (*FollowerListReply, error) {
+	out := new(FollowerListReply)
 	err := c.cc.Invoke(ctx, "/relation.v1.RelationService/GetFollowerList", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -95,12 +95,12 @@ type RelationServiceServer interface {
 	Follow(context.Context, *FollowRequest) (*FollowReply, error)
 	// 取消关注
 	Unfollow(context.Context, *UnfollowRequest) (*UnfollowReply, error)
-	// 批量获取关注关系
+	// 批量获取关注关系, eg: A 对 B,C,D是否已关注
 	BatchGetRelation(context.Context, *BatchGetRelationRequest) (*BatchGetRelationReply, error)
 	// 关注列表
 	GetFollowingList(context.Context, *FollowingListRequest) (*FollowingListReply, error)
 	// 粉丝列表
-	GetFollowerList(context.Context, *FollowerListRequest) (*FollowerListRequest, error)
+	GetFollowerList(context.Context, *FollowerListRequest) (*FollowerListReply, error)
 	mustEmbedUnimplementedRelationServiceServer()
 }
 
@@ -120,7 +120,7 @@ func (UnimplementedRelationServiceServer) BatchGetRelation(context.Context, *Bat
 func (UnimplementedRelationServiceServer) GetFollowingList(context.Context, *FollowingListRequest) (*FollowingListReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFollowingList not implemented")
 }
-func (UnimplementedRelationServiceServer) GetFollowerList(context.Context, *FollowerListRequest) (*FollowerListRequest, error) {
+func (UnimplementedRelationServiceServer) GetFollowerList(context.Context, *FollowerListRequest) (*FollowerListReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFollowerList not implemented")
 }
 func (UnimplementedRelationServiceServer) mustEmbedUnimplementedRelationServiceServer() {}
