@@ -200,13 +200,17 @@ func (s *RelationServiceServer) GetFollowingList(ctx context.Context, req *pb.Fo
 		return nil, err
 	}
 
-	var userIDs []int64
+	var data []*pb.FollowingListReplyUserFollow
 	for _, v := range userFollowList {
-		userIDs = append(userIDs, v.FollowedUID)
+		item := pb.FollowingListReplyUserFollow{
+			Id:          v.ID,
+			FollowedUid: v.FollowedUID,
+		}
+		data = append(data, &item)
 	}
 
 	return &pb.FollowingListReply{
-		UserIds: userIDs,
+		Result: data,
 	}, nil
 }
 
@@ -219,12 +223,16 @@ func (s *RelationServiceServer) GetFollowerList(ctx context.Context, req *pb.Fol
 		return nil, err
 	}
 
-	var userIDs []int64
+	var data []*pb.FollowerListReplyFollower
 	for _, v := range userFollowList {
-		userIDs = append(userIDs, v.FollowerUID)
+		item := pb.FollowerListReplyFollower{
+			Id:          v.ID,
+			FollowerUid: v.FollowerUID,
+		}
+		data = append(data, &item)
 	}
 
 	return &pb.FollowerListReply{
-		UserIds: userIDs,
+		Result: data,
 	}, nil
 }
