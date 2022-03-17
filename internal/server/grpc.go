@@ -19,7 +19,7 @@ func NewGRPCServer(cfg *app.ServerConfig, svc *service.RelationServiceServer) *g
 
 	grpcServer := grpc.NewServer(
 		grpc.Network("tcp"),
-		grpc.Address(":9090"),
+		grpc.Address(cfg.Addr),
 		grpc.Timeout(3*time.Second),
 	)
 
