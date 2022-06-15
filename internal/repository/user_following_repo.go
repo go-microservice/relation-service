@@ -20,6 +20,7 @@ import (
 
 var (
 	_tableUserFollowingName   = (&model.UserFollowingModel{}).TableName()
+	_insertUserFollowingSQL   = "INSERT INTO %s SET user_id = ?, followed_uid =?, created_at = ?, status = ? on duplicate key update status = ?, updated_at = ?"
 	_getUserFollowingSQL      = "SELECT * FROM %s WHERE user_id = %d and followed_uid = %d"
 	_batchGetUserFollowingSQL = "SELECT * FROM %s WHERE id IN (%s)"
 )
@@ -52,7 +53,12 @@ func NewUserFollowing(db *gorm.DB, cache cache.UserFollowingCache) UserFollowing
 
 // CreateUserFollowing create a item
 func (r *userFollowingRepo) CreateUserFollowing(ctx context.Context, db *gorm.DB, data *model.UserFollowingModel) (id int64, err error) {
-	err = db.WithContext(ctx).Create(&data).Error
+	_sql := fmt.Sprintf(_insertUserFollowingSQL, _tableUserFollowingName)
+	err = db.WithContext(ctx).Exec(_sql,
+		data.UserID, data.FollowedUID,
+		data.CreatedAt, data.Status,
+		data.Status, data.UpdatedAt,
+	).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "[repo] create UserFollowing err")
 	}

@@ -18,6 +18,7 @@ import (
 
 var (
 	_tableUserFollowerName   = (&model.UserFollowerModel{}).TableName()
+	_insertUserFollowerSQL   = "INSERT INTO %s SET user_id = ?, follower_uid =?, created_at = ?, status = ? on duplicate key update status = ?, updated_at = ?"
 	_getUserFollowerSQL      = "SELECT * FROM %s WHERE id = ?"
 	_batchGetUserFollowerSQL = "SELECT * FROM %s WHERE id IN (%s)"
 )
@@ -50,7 +51,12 @@ func NewUserFollower(db *gorm.DB, cache cache.UserFollowerCache) UserFollowerRep
 
 // CreateUserFollower create a item
 func (r *userFollowerRepo) CreateUserFollower(ctx context.Context, db *gorm.DB, data *model.UserFollowerModel) (id int64, err error) {
-	err = db.WithContext(ctx).Create(&data).Error
+	_sql := fmt.Sprintf(_insertUserFollowerSQL, _tableUserFollowerName)
+	err = db.WithContext(ctx).Exec(_sql,
+		data.UserID, data.FollowerUID,
+		data.CreatedAt, data.Status,
+		data.Status, data.UpdatedAt,
+	).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "[repo] create UserFollower err")
 	}

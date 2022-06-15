@@ -61,6 +61,7 @@ func (s *RelationServiceServer) Follow(ctx context.Context, req *pb.FollowReques
 			"msg": err.Error(),
 		})).Status(req).Err()
 	}
+	// has follow
 	if following != nil && following.Status == FollowStatusNormal {
 		return &pb.FollowReply{}, nil
 	}
@@ -73,12 +74,14 @@ func (s *RelationServiceServer) Follow(ctx context.Context, req *pb.FollowReques
 		})).Status(req).Err()
 	}
 
+	curTime := time.Now()
 	// 添加到关注表
 	_, err = s.followingRepo.CreateUserFollowing(ctx, tx, &model.UserFollowingModel{
 		UserID:      req.UserId,
 		FollowedUID: req.FollowedUid,
 		Status:      FollowStatusNormal,
-		CreatedAt:   time.Time{},
+		CreatedAt:   curTime,
+		UpdatedAt:   curTime,
 	})
 	if err != nil {
 		tx.Rollback()
@@ -91,7 +94,8 @@ func (s *RelationServiceServer) Follow(ctx context.Context, req *pb.FollowReques
 		UserID:      req.FollowedUid,
 		FollowerUID: req.UserId,
 		Status:      FollowStatusNormal,
-		CreatedAt:   time.Time{},
+		CreatedAt:   curTime,
+		UpdatedAt:   curTime,
 	})
 	if err != nil {
 		tx.Rollback()
@@ -125,7 +129,7 @@ func (s *RelationServiceServer) Unfollow(ctx context.Context, req *pb.UnfollowRe
 		})).Status(req).Err()
 	}
 	if following == nil || following.Status == FollowStatusDelete {
-		return nil, nil
+		return &pb.UnfollowReply{}, nil
 	}
 
 	// 如果是已关注，执行取关逻辑
