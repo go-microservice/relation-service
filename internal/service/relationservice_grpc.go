@@ -128,7 +128,8 @@ func (s *RelationServiceServer) Unfollow(ctx context.Context, req *pb.UnfollowRe
 			"msg": err.Error(),
 		})).Status(req).Err()
 	}
-	if following == nil || following.Status == FollowStatusDelete {
+
+	if following != nil && following.Status == FollowStatusDelete {
 		return &pb.UnfollowReply{}, nil
 	}
 
@@ -150,7 +151,7 @@ func (s *RelationServiceServer) Unfollow(ctx context.Context, req *pb.UnfollowRe
 	}
 
 	// 删除粉丝
-	err = s.followerRepo.UpdateUserFollowerStatus(ctx, tx, req.UserId, req.FollowedUid, FollowStatusDelete)
+	err = s.followerRepo.UpdateUserFollowerStatus(ctx, tx, req.FollowedUid, req.UserId, FollowStatusDelete)
 	if err != nil {
 		tx.Rollback()
 		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
