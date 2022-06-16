@@ -47,12 +47,14 @@ func NewRelationServiceServer(followerRepo repo.UserFollowerRepo, followingRepo 
 
 // Follow user
 func (s *RelationServiceServer) Follow(ctx context.Context, req *pb.FollowRequest) (*pb.FollowReply, error) {
-	// check if is self
+	// if is follow self
 	if req.GetUserId() == req.GetFollowedUid() {
 		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
 			"msg": errors.New("can not follow yourself"),
 		})).Status(req).Err()
 	}
+
+	// check user if exist, include self and followed user
 
 	// check if has followed
 	following, err := s.followingRepo.GetUserFollowing(ctx, req.UserId, req.FollowedUid)
@@ -121,14 +123,17 @@ func (s *RelationServiceServer) Follow(ctx context.Context, req *pb.FollowReques
 
 // Unfollow
 func (s *RelationServiceServer) Unfollow(ctx context.Context, req *pb.UnfollowRequest) (*pb.UnfollowReply, error) {
-	// 是否已经关注过，如果没有，直接返回成功
-	following, err := s.followingRepo.GetUserFollowing(ctx, req.UserId, req.FollowedUid)
+	// cannot unfollow self
+
+	// check user if exist, include self and followed user
+
+	// 已取关
+	following, err := s.followingRepo.GetUserFollowingWithoutCache(ctx, req.UserId, req.FollowedUid)
 	if err != nil {
 		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
 			"msg": err.Error(),
 		})).Status(req).Err()
 	}
-
 	if following != nil && following.Status == FollowStatusDelete {
 		return &pb.UnfollowReply{}, nil
 	}

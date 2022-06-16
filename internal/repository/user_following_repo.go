@@ -32,6 +32,7 @@ type UserFollowingRepo interface {
 	CreateUserFollowing(ctx context.Context, db *gorm.DB, data *model.UserFollowingModel) (id int64, err error)
 	UpdateUserFollowingStatus(ctx context.Context, db *gorm.DB, userID, followedUID int64, status int) error
 	GetUserFollowing(ctx context.Context, userID, followedUID int64) (ret *model.UserFollowingModel, err error)
+	GetUserFollowingWithoutCache(ctx context.Context, userID, followedUID int64) (ret *model.UserFollowingModel, err error)
 	GetFollowingUserList(ctx context.Context, userID, lastID int64, limit int) ([]*model.UserFollowingModel, error)
 	BatchGetUserFollowing(ctx context.Context, userID int64, ids []int64) (ret []*model.UserFollowingModel, err error)
 }
@@ -101,6 +102,15 @@ func (r *userFollowingRepo) GetUserFollowing(ctx context.Context, userID, follow
 		if err != nil {
 			return nil, err
 		}
+	}
+	return data, nil
+}
+
+func (r *userFollowingRepo) GetUserFollowingWithoutCache(ctx context.Context, userID, followedUID int64) (ret *model.UserFollowingModel, err error) {
+	data := new(model.UserFollowingModel)
+	err = r.db.WithContext(ctx).Raw(fmt.Sprintf(_getUserFollowingSQL, _tableUserFollowingName, userID, followedUID)).Scan(&data).Error
+	if err != nil {
+		return
 	}
 	return data, nil
 }
