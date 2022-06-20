@@ -5,15 +5,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/go-microservice/relation-service/internal/model"
-
-	"github.com/go-microservice/relation-service/internal/ecode"
-
 	"github.com/go-eagle/eagle/pkg/errcode"
-
 	"github.com/google/wire"
 
 	pb "github.com/go-microservice/relation-service/api/relation/v1"
+	"github.com/go-microservice/relation-service/internal/ecode"
+	"github.com/go-microservice/relation-service/internal/model"
 	repo "github.com/go-microservice/relation-service/internal/repository"
 )
 
@@ -48,13 +45,11 @@ func NewRelationServiceServer(followerRepo repo.UserFollowerRepo, followingRepo 
 // Follow user
 func (s *RelationServiceServer) Follow(ctx context.Context, req *pb.FollowRequest) (*pb.FollowReply, error) {
 	// if is follow self
-	if req.GetUserId() == req.GetFollowedUid() {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
+	if isSelf(req.GetUserId(), req.GetFollowedUid()) {
+		return nil, ecode.ErrInvalidArgument.WithDetails(errcode.NewDetails(map[string]interface{}{
 			"msg": errors.New("can not follow yourself"),
 		})).Status(req).Err()
 	}
-
-	// check user if exist, include self and followed user
 
 	// check if has followed
 	following, err := s.followingRepo.GetUserFollowing(ctx, req.UserId, req.FollowedUid)
@@ -124,8 +119,11 @@ func (s *RelationServiceServer) Follow(ctx context.Context, req *pb.FollowReques
 // Unfollow
 func (s *RelationServiceServer) Unfollow(ctx context.Context, req *pb.UnfollowRequest) (*pb.UnfollowReply, error) {
 	// cannot unfollow self
-
-	// check user if exist, include self and followed user
+	if isSelf(req.GetUserId(), req.GetFollowedUid()) {
+		return nil, ecode.ErrInvalidArgument.WithDetails(errcode.NewDetails(map[string]interface{}{
+			"msg": errors.New("cannot unfollow self"),
+		})).Status(req).Err()
+	}
 
 	// 已取关
 	following, err := s.followingRepo.GetUserFollowingWithoutCache(ctx, req.UserId, req.FollowedUid)
@@ -177,6 +175,10 @@ func (s *RelationServiceServer) Unfollow(ctx context.Context, req *pb.UnfollowRe
 	}
 
 	return &pb.UnfollowReply{}, nil
+}
+
+func isSelf(UId, otherUId int64) bool {
+	return UId == otherUId
 }
 
 func (s *RelationServiceServer) BatchGetRelation(ctx context.Context, req *pb.BatchGetRelationRequest) (*pb.BatchGetRelationReply, error) {
