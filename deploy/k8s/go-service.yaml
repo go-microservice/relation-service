@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: relation-svc
+  labels:
+    app: relation-service
+spec:
+  ports:
+    - name: relation-svc-port
+      port: 9001
+      protocol: TCP
+      #nodePort: 30002
+      targetPort: 8080
+
+  type: ClusterIP
+  #type: NodePort
+  selector:
+    app: relation-service
