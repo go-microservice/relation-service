@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-eagle/eagle/pkg/errcode"
-	"github.com/google/wire"
 
 	pb "github.com/go-microservice/relation-service/api/relation/v1"
 	"github.com/go-microservice/relation-service/internal/ecode"
@@ -24,9 +23,6 @@ const (
 var (
 	_ pb.RelationServiceServer = (*RelationServiceServer)(nil)
 )
-
-// ProviderSet is service providers.
-var ProviderSet = wire.NewSet(NewRelationServiceServer)
 
 type RelationServiceServer struct {
 	pb.UnimplementedRelationServiceServer

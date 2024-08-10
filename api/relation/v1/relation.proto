@@ -32,19 +32,25 @@ message UnfollowRequest {
 }
 message UnfollowReply {}
 
+// 批量获取关注请求
 message BatchGetRelationRequest {
 	int64 user_id = 1;
 	repeated int64 ids = 2;
 }
+
+// 批量获取关注响应
 message BatchGetRelationReply {
+	// uid -> follow_status
 	map<int64, int64> result = 1;
 }
 
+// 关注列表请求
 message FollowingListRequest {
 	int64 user_id = 1;
 	int64 last_id = 2;
 	int32 limit = 3;
 }
+// 关注列表响应
 message FollowingListReply {
 	message userFollow {
 		int64 id = 1;
@@ -53,11 +59,13 @@ message FollowingListReply {
 	repeated userFollow result = 1;
 }
 
+// 粉丝列表请求
 message FollowerListRequest {
 	int64 user_id = 1;
 	int64 last_id = 2;
 	int32 limit = 3;
 }
+// 粉丝列表响应
 message FollowerListReply {
 	message follower {
 		int64 id = 1;

@@ -30,13 +30,23 @@ all: lint test build
 
 .PHONY: build
 # make build, Build the binary file
-build: dep
-	@go build -v -ldflags ${ldflags} .
+build: 
+	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o build/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
+
+.PHONY: run
+# make run, run current project
+run: wire
+	go run cmd/server/main.go cmd/server/wire_gen.go
+
+.PHONY: wire
+# make wire, generate wire_gen.go
+wire: 
+	cd cmd/server && wire
 
 .PHONY: dep
 # make dep Get the dependencies
 dep:
-	@go mod download
+	@go mod tidy
 
 .PHONY: fmt
 # make fmt
@@ -100,20 +110,6 @@ clean:
 	@go mod tidy
 	@echo "clean finished"
 
-.PHONY: docs
-# gen swagger doc
-docs:
-	@if ! which swag &>/dev/null; then \
-  		echo "downloading swag"; \
-  		go get -u github.com/swaggo/swag/cmd/swag; \
-  	fi
-	@swag init
-	@mv docs/docs.go api/http
-	@mv docs/swagger.json api/http
-	@mv docs/swagger.yaml api/http
-	@echo "gen-docs done"
-	@echo "see docs by: http://localhost:8080/swagger/index.html"
-
 .PHONY: graph
 # make graph 生成交互式的可视化Go程序调用图(会在浏览器自动打开)
 graph:
@@ -138,10 +134,13 @@ mockgen:
 .PHONY: init
 # init env
 init:
-	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
-	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
-	go get -v github.com/google/gnostic
-	go get -v github.com/google/gnostic/cmd/protoc-gen-openapi
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+	go install github.com/google/gnostic@latest
+	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
+	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
+	go install github.com/golang/mock/mockgen@latest
+	go install github.com/favadi/protoc-go-inject-tag@latest
 
 .PHONY: proto
 # generate proto struct only
@@ -176,6 +175,29 @@ openapi:
           --proto_path=./third_party \
           --openapi_out=. \
           $(API_PROTO_FILES)
+
+.PHONY: doc
+# generate html or markdown doc for data type
+doc:
+	protoc --proto_path=. \
+          --proto_path=./third_party \
+	   	  --doc_out=./api \
+	   	  --doc_opt=html,index.html \
+	   	  $(API_PROTO_FILES)
+
+.PHONY: docs
+# gen swagger doc
+docs:
+	@if ! which swag &>/dev/null; then \
+  		echo "downloading swag"; \
+  		go get -u github.com/swaggo/swag/cmd/swag; \
+  	fi
+	@swag init
+	@mv docs/docs.go api/http
+	@mv docs/swagger.json api/http
+	@mv docs/swagger.yaml api/http
+	@echo "gen-docs done"
+	@echo "see docs by: http://localhost:8080/swagger/index.html"
 
 # show help
 help:
