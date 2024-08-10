@@ -20,24 +20,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	eagle "github.com/go-eagle/eagle/pkg/app"
-	"github.com/go-eagle/eagle/pkg/client/consulclient"
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
-	"github.com/go-eagle/eagle/pkg/redis"
-	"github.com/go-eagle/eagle/pkg/registry"
-	"github.com/go-eagle/eagle/pkg/registry/consul"
-	"github.com/go-eagle/eagle/pkg/transport/grpc"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 	_ "go.uber.org/automaxprocs"
-
-	"github.com/go-microservice/relation-service/internal/model"
-	"github.com/go-microservice/relation-service/internal/server"
 )
 
 var (
 	cfgDir  = pflag.StringP("config dir", "c", "config", "config path.")
-	env     = pflag.StringP("env name", "e", "", "env var name.")
+	env     = pflag.StringP("env name", "e", "dev", "env var name.")
 	version = pflag.BoolP("version", "v", false, "show version info.")
 )
 
@@ -72,10 +64,6 @@ func main() {
 
 	// -------------- init resource -------------
 	logger.Init()
-	// init db
-	model.Init()
-	// init redis
-	redis.Init()
 
 	gin.SetMode(cfg.Mode)
 
@@ -95,28 +83,4 @@ func main() {
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
-}
-
-func newApp(cfg *eagle.Config, gs *grpc.Server) *eagle.App {
-	return eagle.New(
-		eagle.WithName(cfg.Name),
-		eagle.WithVersion(cfg.Version),
-		eagle.WithLogger(logger.GetLogger()),
-		eagle.WithServer(
-			// init HTTP server
-			server.NewHTTPServer(&cfg.HTTP),
-			// init gRPC server
-			gs,
-		),
-		eagle.WithRegistry(getConsulRegistry()),
-	)
-}
-
-// create a consul register
-func getConsulRegistry() registry.Registry {
-	client, err := consulclient.New()
-	if err != nil {
-		panic(err)
-	}
-	return consul.New(client)
 }
