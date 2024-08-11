@@ -1,6 +1,9 @@
 SHELL := /bin/bash
 BASEDIR = $(shell pwd)
 
+# make GIT_TAG=v1.0.0 build
+SERVICE_NAME?=relation-service
+
 # build with version infos
 versionDir = "github.com/go-eagle/eagle/pkg/version"
 gitTag = $(shell if [ "`git describe --tags --abbrev=0 2>/dev/null`" != "" ];then git describe --tags --abbrev=0; else git log --pretty=format:'%h' -n 1; fi)
@@ -97,9 +100,9 @@ gen-coverage:
 	@go test -short -coverprofile coverage.txt -covermode=atomic ${PKG_LIST}
 
 .PHONY: docker
-# make docker  生成docker镜像
+# make docker  生成docker镜像, eg: make GIT-TAG=v1.0.0 docker
 docker:
-	docker build -t eagle:$(versionDir) -f Dockeffile .
+	sh deploy/docker_image.sh $(GIT_TAG)
 
 .PHONY: clean
 # make clean
