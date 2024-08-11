@@ -76,10 +76,12 @@ func main() {
 	}()
 
 	// start app
-	app, err := InitApp(&cfg, &cfg.GRPC)
+	app, cleanup, err := InitApp(&cfg, &cfg.GRPC)
 	if err != nil {
 		panic(err)
 	}
+	defer cleanup()
+
 	if err := app.Run(); err != nil {
 		panic(err)
 	}

@@ -17,9 +17,8 @@ import (
 	"github.com/google/wire"
 )
 
-func InitApp(cfg *eagle.Config, config *eagle.ServerConfig) (*eagle.App, error) {
-	wire.Build(server.ProviderSet, service.ProviderSet, repository.ProviderSet, cache.ProviderSet, newApp)
-	return &eagle.App{}, nil
+func InitApp(cfg *eagle.Config, config *eagle.ServerConfig) (*eagle.App, func(), error) {
+	panic(wire.Build(server.ProviderSet, service.ProviderSet, repository.ProviderSet, cache.ProviderSet, newApp))
 }
 
 func newApp(cfg *eagle.Config, gs *grpc.Server) *eagle.App {

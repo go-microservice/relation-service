@@ -10,7 +10,7 @@ import (
 	"github.com/go-eagle/eagle/pkg/cache"
 	"github.com/go-eagle/eagle/pkg/encoding"
 	"github.com/go-eagle/eagle/pkg/log"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/go-microservice/relation-service/internal/model"
 )

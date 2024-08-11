@@ -27,9 +27,12 @@ import (
 
 // Injectors from wire.go:
 
-func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, error) {
+func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, func(), error) {
 	db := model.GetDB()
-	client := redis.Init()
+	client, cleanup, err := redis.Init()
+	if err != nil {
+		return nil, nil, err
+	}
 	userFollowerCache := cache.NewUserFollowerCache(client)
 	userFollowerRepo := repository.NewUserFollower(db, userFollowerCache)
 	userFollowingCache := cache.NewUserFollowingCache(client)
@@ -37,7 +40,9 @@ func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, error) {
 	relationServiceServer := service.NewRelationServiceServer(userFollowerRepo, userFollowingRepo)
 	grpcServer := server.NewGRPCServer(config, relationServiceServer)
 	appApp := newApp(cfg, grpcServer)
-	return appApp, nil
+	return appApp, func() {
+		cleanup()
+	}, nil
 }
 
 // wire.go:
