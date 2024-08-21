@@ -40,12 +40,10 @@ FROM alpine:3.20
 
 WORKDIR /bin
 
-ENV APP_ENV prod
-
 # 从builder镜像中把 /build 拷贝到当前目录
-COPY --from=builder /go/src/relation-service/build/relation-service          /bin/relation-service
-COPY --from=builder /go/src/relation-service/config   /data/conf/relation-service/config
-COPY --from=builder /go/bin/grpc_health_probe 	  /bin/grpc_health_probe
+COPY --from=builder /go/src/relation-service/bin/relation-service   /bin/relation-service
+COPY --from=builder /go/src/relation-service/config                 /data/conf/relation-service/config
+COPY --from=builder /go/bin/grpc_health_probe 	                    /bin/grpc_health_probe
 
 
 RUN apk update \
