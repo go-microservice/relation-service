@@ -1,7 +1,7 @@
 Name: relation-svc
 Version: 1.0.0
 PprofPort: :5559
-Mode: debug                 # debug, release, test
+Mode: debug # debug, release, test
 JwtSecret: JWT_SECRET
 JwtTimeout: 86400
 CookieName: jwt-token
@@ -13,10 +13,10 @@ EnableTrace: false
 EnablePprof: true
 
 HTTP:
-  Addr: :8088
+  Addr: :8083
   ReadTimeout: 3s
   WriteTimeout: 3s
 GRPC:
-  Addr: :9099
+  Addr: :9093
   ReadTimeout: 5s
   WriteTimeout: 5s
