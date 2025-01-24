@@ -1,6 +1,6 @@
 module github.com/go-microservice/relation-service
 
-go 1.22.3
+go 1.22
 
 require (
 	github.com/gin-gonic/gin v1.9.0
